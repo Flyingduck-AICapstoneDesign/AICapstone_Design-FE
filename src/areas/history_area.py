@@ -9,7 +9,7 @@ class HistoryArea(QFrame):
         super().__init__()
         
         # 기록 구역 기본 스타일 및 크기 설정
-        self.setStyleSheet("background-color: #25343F;")
+        self.setStyleSheet("background-color: #525F6C;")
         self.setContentsMargins(20, 60, 20, 60)
         self.setFixedWidth(250) # 너비 고정
         
@@ -18,7 +18,7 @@ class HistoryArea(QFrame):
         
         # 제목 라벨
         title_label = QLabel("쉽게 알아보는\n소송 걸기")
-        title_label.setStyleSheet("color: #FF9B51; font-weight: bold; font-size: 20px;")
+        title_label.setStyleSheet("color: #FAF9F6; font-weight: bold; font-size: 20px;")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.history_layout.addWidget(title_label)

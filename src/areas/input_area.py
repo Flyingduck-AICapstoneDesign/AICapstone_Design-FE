@@ -61,7 +61,7 @@ class InputArea(QFrame):
         # 전송 버튼
         self.send_button = QPushButton("전송")
         self.send_button.setFixedSize(80, 60)
-        self.send_button.setStyleSheet("background-color: #FF9B51; color: white; border-radius: 10px; font-weight: bold; font-size: 14px;")
+        self.send_button.setStyleSheet("background-color: #6A8C6A; color: white; border-radius: 10px; font-weight: bold; font-size: 14px;")
         
         # 버튼 클릭 시 내부 함수 연결
         self.send_button.clicked.connect(self.on_click_send)
