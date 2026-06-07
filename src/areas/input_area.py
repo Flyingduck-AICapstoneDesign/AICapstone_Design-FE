@@ -8,12 +8,12 @@ class InputArea(QFrame):
     def __init__(self):
         super().__init__()
         
-        self.setStyleSheet("background-color: #ede5d3;")
+        self.setStyleSheet("background-color: #EAEFEF;")
         self.setFixedHeight(180)
 
         # 전체 수직 레이아웃
         main_vbox = QVBoxLayout()
-        main_vbox.setContentsMargins(20, 0, 20, 60) 
+        main_vbox.setContentsMargins(40, 0, 40, 60) 
         main_vbox.setSpacing(0)
 
         # 상태 메시지 영역
@@ -56,12 +56,12 @@ class InputArea(QFrame):
         self.text_input = QTextEdit()
         self.text_input.setPlaceholderText("여기에 질문을 입력하세요")
         self.text_input.setFixedHeight(80)
-        self.text_input.setStyleSheet("background-color: white; border: 1px solid #CCCCCC; border-radius: 5px; padding: 10px; font-size: 14px;")
+        self.text_input.setStyleSheet("background-color: white; border: 2px solid #BFC9D1; border-radius: 10px; padding: 10px; font-size: 14px;")
         
         # 전송 버튼
         self.send_button = QPushButton("전송")
         self.send_button.setFixedSize(80, 60)
-        self.send_button.setStyleSheet("background-color: #4A4A4A; color: white; border-radius: 5px; font-weight: bold; font-size: 14px;")
+        self.send_button.setStyleSheet("background-color: #6A8C6A; color: white; border-radius: 10px; font-weight: bold; font-size: 14px;")
         
         # 버튼 클릭 시 내부 함수 연결
         self.send_button.clicked.connect(self.on_click_send)

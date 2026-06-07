@@ -1,8 +1,10 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QLabel
 from PyQt6.QtCore import QSize, Qt, QTimer
 
-# componentes 불러오기
-from components.input_area import InputArea
+# areas 불러오기
+from areas.input_area import InputArea
+from areas.chat_area import ChatArea
+from areas.history_area import HistoryArea
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -18,32 +20,17 @@ class MainWindow(QMainWindow):
         main_layout.setSpacing(0) # gap 제거
         
         # 왼쪽 사이드바 (과거 기록)
-        sidebar = QFrame()
-        sidebar.setStyleSheet("background-color: #4A4A4A;")
-        sidebar.setFixedWidth(250) # 너비 고정
-        
-        sidebar_layout = QVBoxLayout()
-        sidebar_label = QLabel("과거 질문 내역")
-        sidebar_label.setStyleSheet("color: white; font-weight: bold;")
-        sidebar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sidebar_layout.addWidget(sidebar_label)
-        sidebar.setLayout(sidebar_layout)
+        self.sidebar_widget = HistoryArea()
 
         # 오른쪽 전체 영역
         right_widget = QWidget()
         right_layout = QVBoxLayout() # flex-col
         right_layout.setContentsMargins(0, 0, 0, 0)
+        right_widget.setStyleSheet("background-color: #EAEFEF;")
         right_layout.setSpacing(0)
 
         # 대화창 영역
-        chat_area = QFrame()
-        chat_area.setStyleSheet("background-color: #F4F4F4;")
-        
-        chat_layout = QVBoxLayout()
-        chat_label = QLabel("사용자 / 챗봇 대화가 표시되는 구역")
-        chat_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        chat_layout.addWidget(chat_label)
-        chat_area.setLayout(chat_layout)
+        self.chat_widget = ChatArea()
 
         # 입력창 영역
         self.input_widget = InputArea()
@@ -54,12 +41,12 @@ class MainWindow(QMainWindow):
 
         # 조립
         # 오른쪽 영역
-        right_layout.addWidget(chat_area)
+        right_layout.addWidget(self.chat_widget)
         right_layout.addWidget(self.input_widget)
         right_widget.setLayout(right_layout)
 
         # 메인 영역
-        main_layout.addWidget(sidebar)
+        main_layout.addWidget(self.sidebar_widget)
         main_layout.addWidget(right_widget)
         
         main_widget.setLayout(main_layout)

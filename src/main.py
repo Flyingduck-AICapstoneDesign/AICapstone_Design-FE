@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from components.main_window import MainWindow
+from main_window import MainWindow
 
 def main():
     # PyQt 어플리케이션 객체 생성
