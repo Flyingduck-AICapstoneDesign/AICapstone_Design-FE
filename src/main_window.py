@@ -18,8 +18,8 @@ class AIWorker(QThread):
 
     def run(self):
         try:
-            # 1. AI 서버의 API 주소
-            url = "http://220.69.241.162:8000" 
+            # AI 서버의 API 주소
+            url = "http://192.168.0.136:8000/api/chat" 
             
             headers = {
                 "Content-Type": "application/json"
