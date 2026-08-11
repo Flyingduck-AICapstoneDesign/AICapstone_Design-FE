@@ -41,3 +41,13 @@ class ChatArea(QWidget):
         # 빈 공간이 항상 맨 밑에 있도록 위쪽에 삽입
         # 세 번째 인자로 alignment 전달하여 너비 팽창 방지
         self.chat_layout.insertWidget(self.chat_layout.count() - 1, bubble, alignment=align)
+
+    def clear_chat(self):
+        """
+        화면에 있는 모든 채팅 말풍선을 삭제하여 빈 화면으로 만듭니다.
+        """
+        # 마지막 빈 공간(addStretch)은 남겨두기 위해 1개가 남을 때까지 반복 삭제
+        while self.chat_layout.count() > 1:
+            item = self.chat_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()    # 메모리에서 완전히 제거
