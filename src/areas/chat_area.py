@@ -12,9 +12,9 @@ class ChatArea(QWidget):
         
         # 스크롤 영역 생성 및 설정
         self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True) # 내부 위젯 크기 자동 조절
-        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame) # 테두리 제거
-        self.scroll_area.setStyleSheet("background-color: #EAEFEF;") # 배경색 설정
+        self.scroll_area.setWidgetResizable(True)   # 내부 위젯 크기 자동 조절
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)    # 테두리 제거
+        self.scroll_area.setStyleSheet("background-color: #EAEFEF;")    # 배경색 설정
         
         # 스크롤 안에 들어갈 실제 메시지 표시용 위젯
         self.content_widget = QWidget()

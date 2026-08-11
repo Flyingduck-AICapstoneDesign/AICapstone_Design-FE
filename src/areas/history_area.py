@@ -37,11 +37,6 @@ class HistoryArea(QFrame):
         # 아래쪽을 밀어주는 빈 공간 추가 
         self.history_layout.addStretch()
 
-        # 확인용 테스트 데이터
-        self.add_history("전세금 반환 소송 절차")
-        self.add_history("근로계약서 미작성 신고")
-        self.add_history("빌려준 돈을 받지 못할 때")
-
     def add_history(self, title):
         """
         새로운 과거 기록 컴포넌트를 사이드바에 추가하는 함수

@@ -1,16 +1,63 @@
+import os 
 import requests
+from dotenv import load_dotenv
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QLabel
 from PyQt6.QtCore import QSize, QThread, pyqtSignal
-import time # 🌟 소요 시간 측정을 위해 추가되었습니다.
+import time 
+
+load_dotenv()
 
 # areas 불러오기
 from areas.input_area import InputArea
 from areas.chat_area import ChatArea
 from areas.history_area import HistoryArea
 
-# API 통신 담당
+# [역할 1] 특정 대화방의 채팅 '내용'을 불러오는 통신 담당
+class HistoryWorker(QThread):
+    history_received = pyqtSignal(list)
+
+    def __init__(self, session_id):
+        super().__init__()
+        self.session_id = session_id
+
+    def run(self):
+        try:
+            base_url = os.getenv("BE_API_URL", "http://127.0.0.1:8000")
+            url = f"{base_url}/api/history/{self.session_id}" 
+            
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                result = response.json()
+                messages = result.get("messages", [])
+                self.history_received.emit(messages)
+            else:
+                self.history_received.emit([])
+        except Exception as e:
+            print(f"과거 대화 내용 불러오기 실패: {e}")
+            self.history_received.emit([])
+
+# [역할 2] 사이드바에 띄울 '전체 방 목록'을 불러오는 통신 담당
+class HistoryListWorker(QThread):
+    list_received = pyqtSignal(list)
+
+    def run(self):
+        try:
+            base_url = os.getenv("BE_API_URL", "http://127.0.0.1:8000")
+            url = f"{base_url}/api/history" 
+            
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                self.list_received.emit(response.json())
+            else:
+                self.list_received.emit([])
+        except Exception as e:
+            print(f"사이드바 목록 불러오기 실패: {e}")
+            self.list_received.emit([])
+
+# API 통신 담당 (질문 전송)
 class AIWorker(QThread):
-    # AI 응답이 완료되면 UI(메인창)로 텍스트를 전달할 신호
     answer_received = pyqtSignal(str)
 
     def __init__(self, user_text):
@@ -19,27 +66,24 @@ class AIWorker(QThread):
 
     def run(self):
         try:
-            # AI 서버의 API 주소
-            url = "https://paralysis-renounce-everyone.ngrok-free.dev/api/chat" 
+            base_url = os.getenv("BE_API_URL", "http://127.0.0.1:8000")
+            url = f"{base_url}/chat"
             
             headers = {
                 "Content-Type": "application/json", 
-                "ngrok-skip-browser-warning": "true"  # ngrok 경고창을 강제로 패스하는 헤더
+                "ngrok-skip-browser-warning": "true"  
             }
             
-            # 질문
             data = {
-                "question": self.user_text
+                "session_id": "session_123", 
+                "user_id": "test_user",      
+                "message": self.user_text    
             }
             
-            # AI로 전송
             response = requests.post(url, headers=headers, json=data, timeout=300)
             
-            # 서버 응답 확인
             if response.status_code == 200:
                 result = response.json()
-                
-                # 답변
                 ai_answer = result.get("answer", "서버 응답 데이터 구조가 다릅니다.")
             else:
                 ai_answer = f"서버 오류가 발생했습니다. (코드: {response.status_code})"
@@ -49,7 +93,6 @@ class AIWorker(QThread):
         except Exception as e:
             ai_answer = f"서버 연결 실패: 인공지능 서버가 켜져 있는지 확인하세요.\n({str(e)})"
         
-        # 완료된 답변을 메인 UI 창으로 던져줍니다.
         self.answer_received.emit(ai_answer)
 
 class MainWindow(QMainWindow):
@@ -59,83 +102,99 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("AI 캡스톤 디자인 - 민사 소송 AI 상담")
         self.setMinimumSize(QSize(1080, 720))
         
-        # 가장 밑바탕 레이아웃 flex-row
         main_widget = QWidget()
         main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0) # margin 제거
-        main_layout.setSpacing(0) # gap 제거
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0) 
         
-        # 왼쪽 사이드바 (과거 기록)
         self.sidebar_widget = HistoryArea()
 
-        # 오른쪽 전체 영역
         right_widget = QWidget()
-        right_layout = QVBoxLayout() # flex-col
+        right_layout = QVBoxLayout() 
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_widget.setStyleSheet("background-color: #EAEFEF;")
         right_layout.setSpacing(0)
 
-        # 대화창 영역
         self.chat_widget = ChatArea()
-
-        # 입력창 영역
         self.input_widget = InputArea()
         
-        # --- 신호 연결 ---
-        # InputArea의 'clicked_send' 신호 'handle_send_question'에 연결
         self.input_widget.clicked_send.connect(self.handle_send_question)
 
-        # 조립
-        # 오른쪽 영역
         right_layout.addWidget(self.chat_widget)
         right_layout.addWidget(self.input_widget)
         right_widget.setLayout(right_layout)
 
-        # 메인 영역
         main_layout.addWidget(self.sidebar_widget)
         main_layout.addWidget(right_widget)
         
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
         
-        # 🌟 질문 시작 시간을 담아둘 변수를 초기화합니다.
-        self.start_time = 0.0
+        self.start_time = 0.0  # 들여쓰기 오류 수정됨
+
+        # 기존에 있던 채팅 내용 불러오기
+        self.load_history("session_123") 
+        
+        # 앱이 켜질 때 사이드바 목록도 불러오기 실행
+        self.load_history_list()
+
+    # 사이드바 목록 불러오기 로직
+    def load_history_list(self):
+        self.list_worker = HistoryListWorker()
+        self.list_worker.list_received.connect(self.display_history_list)
+        self.list_worker.start()
+
+    # 사이드바에 제목들 그려주기
+    def display_history_list(self, sessions):
+        if not sessions:
+            print("사이드바에 띄울 목록이 없습니다.")
+            return
+            
+        for session in sessions:
+            title = session.get("title", "제목 없음")
+            self.sidebar_widget.add_history(title)
+
+    # 특정 채팅 내용 불러오기 로직
+    def load_history(self, session_id):
+        self.history_worker = HistoryWorker(session_id)
+        self.history_worker.history_received.connect(self.display_history)
+        self.history_worker.start()
+
+    # 불러온 내용을 화면에 그리는 로직
+    def display_history(self, messages):
+        if not messages:
+            print("불러올 과거 대화 기록이 없습니다.")
+            return
+            
+        print(f"과거 대화 내용 {len(messages)}개를 불러왔습니다.")
+        
+        for msg in messages:
+            sender = msg.get("sender", "")
+            text = msg.get("text", "")
+            
+            is_user = (sender != "AI") 
+            self.chat_widget.add_message(text, is_user)
 
     # 질문 전송 컨트롤 로직
     def handle_send_question(self, text):
-        """
-        사용자가 입력한 텍스트를 처리하고 AI 응답을 기다리는 함수
-        """
-        if not text.strip(): # 빈 메시지 방지
+        if not text.strip(): 
             return
         
         print(f"전송된 질문: {text}")
-        
-        # 🌟 질문을 전송하는 시점의 현재 타임스탬프를 저장합니다.
         self.start_time = time.time()
         
-        # 질문 대화창에 띄우기
         self.chat_widget.add_message(text, is_user=True)
-        
-        # 로딩 상태 시작
         self.input_widget.set_loading(True)
         
         self.ai_worker = AIWorker(text)
-        # AI가 응답을 완료하면 finish_loading 함수가 호출되도록 연결
         self.ai_worker.answer_received.connect(self.finish_loading)
-
         self.ai_worker.start()
 
     def finish_loading(self, ai_answer):
-        # 🌟 답변을 받은 현재 시간에서 시작 시간을 빼서 경과 시간을 계산합니다.
         elapsed_time = time.time() - self.start_time
 
-        # 로딩 상태 해제
         self.input_widget.set_loading(False)
         print("AI 응답이 완료되었습니다.")
-        
-        # 🌟 계산된 소요 시간을 터미널에 소수점 둘째 자리까지 출력합니다.
         print(f"--> [소요 시간]: {elapsed_time:.2f}초")
 
-        # AI 답변 대화창에 띄우기
         self.chat_widget.add_message(ai_answer, is_user=False)
