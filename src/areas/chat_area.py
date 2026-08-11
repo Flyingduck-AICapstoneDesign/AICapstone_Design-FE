@@ -32,11 +32,6 @@ class ChatArea(QWidget):
         # 레이아웃
         self.chat_layout.addStretch()
 
-        # 테스트용 메시지 추가 
-        self.add_message("안녕하세요. 법률 상담 AI 챗봇입니다. 민사 소송과 관련하여 궁금하신 점이 있으신가요? 상황을 말씀해 주시면 절차와 필요한 서류를 안내해 드리겠습니다.", is_user=False)
-        self.add_message("친구가 작년에 급하다고 해서 500만 원을 빌려줬는데, 계속 준다고 말만 하고 1년째 안 주고 있어요. 차용증은 따로 안 썼는데 카톡이랑 계좌 이체 내역만 있어도 소송이 가능한가요?", is_user=True)
-        self.add_message("네, 차용증이 없더라도 대여금 사실을 증명할 수 있는 다른 객관적 자료가 있다면 소송이 가능합니다. 말씀하신 계좌 이체 내역(돈을 보낸 사실)과 카카오톡 대화 내용(돈을 빌렸다는 인정 및 갚겠다는 약속)은 아주 중요한 증거가 됩니다. 우선 정식 소송 전에 '지급명령' 신청을 고려해 보시는 건 어떨까요?", is_user=False)
-
     def add_message(self, text, is_user):
         bubble = ChatBubble(text, is_user)
         
