@@ -1,11 +1,11 @@
 import time
-from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
 from PyQt6.QtCore import QSize
 
 # areas 불러오기
 from areas.input_area import InputArea
 from areas.chat_area import ChatArea
-from areas.history_area import HistoryArea
+from areas.header_area import HeaderArea 
 
 # 분리해둔 통신 워커들 불러오기
 from workers.api_workers import HistoryWorker, HistoryListWorker, AIWorker
@@ -18,62 +18,37 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(QSize(1080, 720))
         
         main_widget = QWidget()
-        main_layout = QHBoxLayout()
+        main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0) 
         
-        self.sidebar_widget = HistoryArea()
-
-        right_widget = QWidget()
-        right_layout = QVBoxLayout() 
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_widget.setStyleSheet("background-color: #EAEFEF;")
-        right_layout.setSpacing(0)
+        self.header_widget = HeaderArea()
 
         self.chat_widget = ChatArea()
         self.input_widget = InputArea()
         
         self.input_widget.clicked_send.connect(self.handle_send_question)
 
-        right_layout.addWidget(self.chat_widget)
-        right_layout.addWidget(self.input_widget)
-        right_widget.setLayout(right_layout)
-
-        main_layout.addWidget(self.sidebar_widget)
-        main_layout.addWidget(right_widget)
+        main_layout.addWidget(self.header_widget)
+        main_layout.addWidget(self.chat_widget)
+        main_layout.addWidget(self.input_widget)
         
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
-        # 신호 연결
-        self.sidebar_widget.session_selected.connect(self.handle_session_click)
-        
         self.start_time = 0.0
+        
+        # 네비게이션 버튼 신호 연결
+        self.header_widget.go_to_history.connect(self.handle_go_to_history)
+        self.header_widget.go_to_info.connect(self.handle_go_to_info)
 
-        # 앱이 켜질 때 사이드바 목록도 불러오기 실행
-        self.load_history_list()
+    def handle_go_to_history(self):
+        print("버튼 클릭됨: 과거 기록 페이지로 이동해야 합니다!")
+        # 나중에 여기에 페이지를 전환하는 코드 입력
 
-    def handle_session_click(self, session_id):
-        print(f"[{session_id}] 대화 기록을 불러옵니다...")
-        self.chat_widget.clear_chat() # 1. 기존 화면을 싹 비운다.
-        self.load_history(session_id)
-
-    # 사이드바 목록 불러오기 로직
-    def load_history_list(self):
-        self.list_worker = HistoryListWorker()
-        self.list_worker.list_received.connect(self.display_history_list)
-        self.list_worker.start()
-
-    # 사이드바에 제목들 그려주기
-    def display_history_list(self, sessions):
-        if not sessions:
-            print("사이드바에 띄울 목록이 없습니다.")
-            return
-            
-        for session in sessions:
-            session_id = session.get("session_id", "")
-            title = session.get("title", "제목 없음")
-            self.sidebar_widget.add_history(session_id, title)
+    def handle_go_to_info(self):
+        print("버튼 클릭됨: 추가 정보 페이지로 이동해야 합니다!")
+        # 나중에 여기에 페이지를 전환하는 코드 입력
 
     # 특정 채팅 내용 불러오기 로직
     def load_history(self, session_id):

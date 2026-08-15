@@ -12,8 +12,8 @@ class HistoryArea(QFrame):
         
         # 기록 구역 기본 스타일 및 크기 설정
         self.setStyleSheet("background-color: #525F6C;")
-        self.setContentsMargins(20, 60, 20, 60)
-        self.setFixedWidth(250) # 너비 고정
+        self.setStyleSheet(40, 20, 40, 0) 
+        # self.setFixedWidth(250) # 너비 고정
         
         # 레이아웃 생성
         self.history_layout = QVBoxLayout(self)
