@@ -1,12 +1,13 @@
 import time
-# [추가] QSize, Qt 등 누락된 기능 추가
+import uuid
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QStackedWidget, QLabel
 from PyQt6.QtCore import QSize, Qt 
 
 # areas 불러오기
 from areas.input_area import InputArea
 from areas.chat_area import ChatArea
-from areas.header_area import HeaderArea 
+from areas.header_area import HeaderArea
+from areas.history_area import HistoryArea 
 
 # 분리해둔 통신 워커들 불러오기
 from workers.api_workers import HistoryWorker, HistoryListWorker, AIWorker
@@ -17,6 +18,9 @@ class MainWindow(QMainWindow):
         
         self.setWindowTitle("AI 캡스톤 디자인 - 민사 소송 AI 상담")
         self.setMinimumSize(QSize(1080, 720))
+        
+        # 현재 채팅방의 고유 세션 ID 생성
+        self.current_session_id = f"session_{uuid.uuid4().hex[:8]}"
         
         main_widget = QWidget()
         main_layout = QVBoxLayout()
@@ -45,12 +49,8 @@ class MainWindow(QMainWindow):
         chat_layout.addWidget(self.input_widget)
 
         # 과거 기록 화면 임시 세팅
-        self.history_page = QWidget()
-        self.history_page.setStyleSheet("background-color: #EAEFEF;")
-        history_layout = QVBoxLayout(self.history_page)
-        history_label = QLabel("여기는 과거 기록 페이지입니다.")
-        history_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        history_layout.addWidget(history_label)
+        self.history_page = HistoryArea()
+        self.history_page.session_selected.connect(self.handle_session_click)
 
         # 추가 정보 화면 임시 세팅
         self.info_page = QWidget()
@@ -72,6 +72,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_widget)
 
         self.start_time = 0.0
+
+        self.load_history_list()
         
         # 네비게이션 버튼 신호 연결
         self.header_widget.go_to_chat.connect(self.handle_go_to_chat)
@@ -80,16 +82,47 @@ class MainWindow(QMainWindow):
 
     def handle_go_to_chat(self):
         print("메인 채팅 페이지로 이동하며, 대화 내용을 초기화합니다.")
+        # 새 세션 ID 부여 및 화면 리셋
+        self.current_session_id = f"session_{uuid.uuid4().hex[:8]}"
         self.stacked_widget.setCurrentIndex(0)
         self.chat_widget.clear_chat()
 
     def handle_go_to_history(self):
         print("버튼 클릭됨: 과거 기록 페이지로 이동해야 합니다!")
+        self.load_history_list()
         self.stacked_widget.setCurrentIndex(1)
 
     def handle_go_to_info(self):
         print("버튼 클릭됨: 추가 정보 페이지로 이동해야 합니다!")
         self.stacked_widget.setCurrentIndex(2)
+
+    # 과거 기록 카드 클릭 시 실행되는 로직
+    def handle_session_click(self, session_id):
+        print(f"[{session_id}] 대화 기록을 불러옵니다...")
+        self.current_session_id = session_id
+        self.stacked_widget.setCurrentIndex(0) 
+        self.chat_widget.clear_chat()   
+        self.load_history(session_id)  
+
+    # 과거 기록 전체 목록 요청 로직
+    def load_history_list(self):
+        self.list_worker = HistoryListWorker()
+        self.list_worker.list_received.connect(self.display_history_list)
+        self.list_worker.start()
+
+    # 받아온 목록을 HistoryArea에 그려주는 로직
+    def display_history_list(self, sessions):
+        self.history_page.clear_history()
+        if not sessions:
+            print("불러올 과거 기록 목록이 없습니다.")
+            return
+            
+        for session in sessions:
+            session_id = session.get("session_id", "")
+            title = session.get("title", "제목 없음")
+            date = session.get("date", "날짜 없음")
+            
+            self.history_page.add_history(session_id, title, date)
 
     # 특정 채팅 내용 불러오기 로직
     def load_history(self, session_id):
@@ -123,7 +156,8 @@ class MainWindow(QMainWindow):
         self.chat_widget.add_message(text, is_user=True)
         self.input_widget.set_loading(True)
         
-        self.ai_worker = AIWorker(text)
+        # 현재 활성화된 세션 ID를 넘겨서 질문 전송
+        self.ai_worker = AIWorker(text, self.current_session_id)
         self.ai_worker.answer_received.connect(self.finish_loading)
         self.ai_worker.start()
 
