@@ -1,6 +1,7 @@
 import time
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
-from PyQt6.QtCore import QSize
+# [추가] QSize, Qt 등 누락된 기능 추가
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QStackedWidget, QLabel
+from PyQt6.QtCore import QSize, Qt 
 
 # areas 불러오기
 from areas.input_area import InputArea
@@ -21,17 +22,51 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0) 
-        
+
+        # 헤더 구역 고정
         self.header_widget = HeaderArea()
+        main_layout.addWidget(self.header_widget)
+
+        # 스케치북 생성
+        self.stacked_widget = QStackedWidget()
+
+        # 메인 채팅 화면 세팅
+        self.chat_page = QWidget()
+        chat_layout = QVBoxLayout(self.chat_page)
+        chat_layout.setContentsMargins(0, 0, 0, 0)
+        chat_layout.setSpacing(0)
 
         self.chat_widget = ChatArea()
         self.input_widget = InputArea()
         
         self.input_widget.clicked_send.connect(self.handle_send_question)
 
-        main_layout.addWidget(self.header_widget)
-        main_layout.addWidget(self.chat_widget)
-        main_layout.addWidget(self.input_widget)
+        chat_layout.addWidget(self.chat_widget)
+        chat_layout.addWidget(self.input_widget)
+
+        # 과거 기록 화면 임시 세팅
+        self.history_page = QWidget()
+        self.history_page.setStyleSheet("background-color: #EAEFEF;")
+        history_layout = QVBoxLayout(self.history_page)
+        history_label = QLabel("여기는 과거 기록 페이지입니다.")
+        history_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        history_layout.addWidget(history_label)
+
+        # 추가 정보 화면 임시 세팅
+        self.info_page = QWidget()
+        self.info_page.setStyleSheet("background-color: #EAEFEF;")
+        info_layout = QVBoxLayout(self.info_page)
+        info_label = QLabel("여기는 추가 정보 페이지입니다.")
+        info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        info_layout.addWidget(info_label)
+
+        # 페이지를 스케치북에 적용
+        self.stacked_widget.addWidget(self.chat_page)  
+        self.stacked_widget.addWidget(self.history_page) 
+        self.stacked_widget.addWidget(self.info_page)  
+
+        # 완성된 스케치북 메인 레이아웃에 적용
+        main_layout.addWidget(self.stacked_widget)
         
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
@@ -39,16 +74,22 @@ class MainWindow(QMainWindow):
         self.start_time = 0.0
         
         # 네비게이션 버튼 신호 연결
+        self.header_widget.go_to_chat.connect(self.handle_go_to_chat)
         self.header_widget.go_to_history.connect(self.handle_go_to_history)
         self.header_widget.go_to_info.connect(self.handle_go_to_info)
 
+    def handle_go_to_chat(self):
+        print("메인 채팅 페이지로 이동하며, 대화 내용을 초기화합니다.")
+        self.stacked_widget.setCurrentIndex(0)
+        self.chat_widget.clear_chat()
+
     def handle_go_to_history(self):
         print("버튼 클릭됨: 과거 기록 페이지로 이동해야 합니다!")
-        # 나중에 여기에 페이지를 전환하는 코드 입력
+        self.stacked_widget.setCurrentIndex(1)
 
     def handle_go_to_info(self):
         print("버튼 클릭됨: 추가 정보 페이지로 이동해야 합니다!")
-        # 나중에 여기에 페이지를 전환하는 코드 입력
+        self.stacked_widget.setCurrentIndex(2)
 
     # 특정 채팅 내용 불러오기 로직
     def load_history(self, session_id):
