@@ -13,10 +13,12 @@ class HistoryCard(QFrame):
                 background-color: white;
                 border: 1px solid #CCCCCC;
                 border-radius: 10px;
+                margin-right: 15px;
             }
             HistoryCard:hover {
                 border: 2px solid #6A8C6A;
                 background-color: #F8F9F9;
+                margin-right: 15px;
             }
         """)
         self.setFixedHeight(80)
