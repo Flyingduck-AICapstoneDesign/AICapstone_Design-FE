@@ -73,7 +73,7 @@ class HistoryArea(QWidget):
         card = HistoryCard(session_id, title, date)
         # 카드에서 클릭 신호가 오면, 그걸 그대로 메인 창으로 전달
         card.session_clicked.connect(self.session_selected.emit)
-        self.card_layout.insertWidget(0, card)
+        self.card_layout.addWidget(card)
 
     # 카드를 싹 비우는 함수 (새로고침 용도)
     def clear_history(self):
