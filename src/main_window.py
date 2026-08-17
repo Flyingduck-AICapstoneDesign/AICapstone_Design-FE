@@ -8,6 +8,7 @@ from areas.input_area import InputArea
 from areas.chat_area import ChatArea
 from areas.header_area import HeaderArea
 from areas.history_area import HistoryArea 
+from areas.info_area import InfoArea
 
 # 분리해둔 통신 워커들 불러오기
 from workers.api_workers import HistoryWorker, HistoryListWorker, AIWorker
@@ -53,12 +54,7 @@ class MainWindow(QMainWindow):
         self.history_page.session_selected.connect(self.handle_session_click)
 
         # 추가 정보 화면 임시 세팅
-        self.info_page = QWidget()
-        self.info_page.setStyleSheet("background-color: #EAEFEF;")
-        info_layout = QVBoxLayout(self.info_page)
-        info_label = QLabel("여기는 추가 정보 페이지입니다.")
-        info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        info_layout.addWidget(info_label)
+        self.info_page = InfoArea()
 
         # 페이지를 스케치북에 적용
         self.stacked_widget.addWidget(self.chat_page)  
