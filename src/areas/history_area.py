@@ -1,48 +1,83 @@
-from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame, QLabel
+from PyQt6.QtCore import pyqtSignal, Qt
 
-# 컴포넌트 불러오기
-from components.history_item import HistoryItem 
+from components.history_card import HistoryCard
 
-class HistoryArea(QFrame):
+class HistoryArea(QWidget):
+    # 특정 카드가 클릭되었을 때 메인 창으로 보낼 신호
     session_selected = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
         
-        # 기록 구역 기본 스타일 및 크기 설정
-        self.setStyleSheet("background-color: #525F6C;")
-        self.setContentsMargins(20, 60, 20, 60)
-        self.setFixedWidth(250) # 너비 고정
+        self.setStyleSheet("background-color: #EAEFEF;")
         
-        # 레이아웃 생성
-        self.history_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(40, 40, 40, 40)
+        main_layout.setSpacing(20)
         
-        # 제목 라벨
-        title_label = QLabel("쉽게 알아보는\n소송 걸기")
-        title_label.setStyleSheet("color: #FAF9F6; font-weight: bold; font-size: 20px;")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        self.history_layout.addWidget(title_label)
-        
-        self.history_layout.addSpacing(60)
+        # 상단 제목
+        title_label = QLabel("과거 대화 기록")
+        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333333; background-color: transparent;")
+        main_layout.addWidget(title_label)
 
-        # 서브 제목 라벨
-        subtitle_label = QLabel("과거 대화 기록")
-        subtitle_label.setStyleSheet("color: #EAEFEF; font-weight: bold; font-size: 13px;")
-        subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.history_layout.addWidget(subtitle_label)
-
-        self.history_layout.addSpacing(10)
+        # 스크롤 영역 생성
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         
-        # 아래쪽을 밀어주는 빈 공간 추가 
-        self.history_layout.addStretch()
+        # 스크롤바 디자인 변경
+        self.scroll_area.setStyleSheet("""
+            QScrollArea {
+                background-color: transparent;
+            }
+            QScrollBar:vertical {
+                border: none;
+                background-color: transparent;
+                width: 12px;
+                margin: 0px 0px 0px 0px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #C0C0C0;
+                min-height: 40px;
+                border-radius: 6px;
+                margin: 2px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #999999;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+                background: none;
+            }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+        """)
 
-    def add_history(self, session_id, title):
-        item = HistoryItem(session_id, title)
+        # 스크롤 안에 들어갈 도화지 위젯
+        self.content_widget = QWidget()
+        self.content_widget.setStyleSheet("background-color: transparent;")
         
-        # 아이템이 클릭되면, 그 신호를 메인 창으로 전달
-        item.session_clicked.connect(self.session_selected.emit)
+        # 도화지에 카드들을 쌓아줄 레이아웃
+        self.card_layout = QVBoxLayout(self.content_widget)
+        self.card_layout.setContentsMargins(0, 0, 0, 0)
+        self.card_layout.setSpacing(15)
+        self.card_layout.setAlignment(Qt.AlignmentFlag.AlignTop) # 위에서부터 차곡차곡
 
-        self.history_layout.insertWidget(self.history_layout.count() - 1, item)
+        self.scroll_area.setWidget(self.content_widget)
+        main_layout.addWidget(self.scroll_area)
+
+    # 외부에서 목록을 받아 카드를 추가해주는 함수
+    def add_history(self, session_id, title, date):
+        card = HistoryCard(session_id, title, date)
+        # 카드에서 클릭 신호가 오면, 그걸 그대로 메인 창으로 전달
+        card.session_clicked.connect(self.session_selected.emit)
+        self.card_layout.addWidget(card)
+
+    # 카드를 싹 비우는 함수 (새로고침 용도)
+    def clear_history(self):
+        while self.card_layout.count() > 0:
+            item = self.card_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()

@@ -8,7 +8,7 @@ class ChatArea(QWidget):
         
         # ChatArea 자체의 레이아웃
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 60, 0, 0)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         
         # 스크롤 영역 생성 및 설정
         self.scroll_area = QScrollArea()
@@ -22,7 +22,7 @@ class ChatArea(QWidget):
         
         # 레이아웃 설정
         self.chat_layout = QVBoxLayout(self.content_widget)
-        self.chat_layout.setContentsMargins(40, 0, 40, 20) 
+        self.chat_layout.setContentsMargins(40, 20, 40, 20) 
         self.chat_layout.setSpacing(40)
         
         # 조립
