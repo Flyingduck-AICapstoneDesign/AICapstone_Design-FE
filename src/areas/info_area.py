@@ -13,7 +13,7 @@ class InfoArea(QWidget):
         
         # 상단 제목
         title_label = QLabel("유용한 법률 정보 사이트")
-        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333333;")
+        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333333; background-color: transparent;")
         main_layout.addWidget(title_label)
 
         # 스크롤 영역 생성

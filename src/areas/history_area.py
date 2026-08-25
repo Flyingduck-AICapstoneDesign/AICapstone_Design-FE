@@ -18,7 +18,7 @@ class HistoryArea(QWidget):
         
         # 상단 제목
         title_label = QLabel("과거 대화 기록")
-        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333333;")
+        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333333; background-color: transparent;")
         main_layout.addWidget(title_label)
 
         # 스크롤 영역 생성
