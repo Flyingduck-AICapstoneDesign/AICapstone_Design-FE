@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QTextEdit, QPushButton, QLabel, QProgressBar, QGraphicsOpacityEffect, QSpacerItem, QSizePolicy
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt, QEvent
 
 class InputArea(QFrame): 
     # 메시지가 전송 신호
@@ -57,7 +57,9 @@ class InputArea(QFrame):
         self.text_input.setPlaceholderText("여기에 질문을 입력하세요")
         self.text_input.setFixedHeight(80)
         self.text_input.setStyleSheet("background-color: white; border: 2px solid #BFC9D1; border-radius: 10px; padding: 10px; font-size: 14px;")
-        
+
+        self.text_input.installEventFilter(self)
+
         # 전송 버튼
         self.send_button = QPushButton("전송")
         self.send_button.setFixedSize(80, 60)
@@ -73,11 +75,23 @@ class InputArea(QFrame):
         main_vbox.addLayout(layout)
         self.setLayout(main_vbox)
 
+    def eventFilter(self, obj, event):
+        if obj is self.text_input and event.type() == QEvent.Type.KeyPress:
+            # 눌린 키가 엔터(Enter/Return)키라면
+            if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                if event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
+                    return False 
+                else:
+                    self.on_click_send()
+                    return True
+        return super().eventFilter(obj, event)
+    
     # 버튼 누르면 텍스트 외부로 전달하는 로직
     def on_click_send(self):
         text = self.text_input.toPlainText().strip()
         if text:
             self.clicked_send.emit(text) 
+            self.text_input.clear()
 
     # 투명도 변경 로직
     def set_loading(self, is_loading):
