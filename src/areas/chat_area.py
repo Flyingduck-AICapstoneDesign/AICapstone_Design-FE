@@ -1,5 +1,8 @@
+import os
+
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPainter, QPixmap, QColor
 from components.chat_bubble import ChatBubble
 
 class ChatArea(QWidget):
@@ -15,6 +18,7 @@ class ChatArea(QWidget):
         self.scroll_area.setWidgetResizable(True)   # 내부 위젯 크기 자동 조절
         self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)    # 테두리 제거
         self.scroll_area.setStyleSheet("background-color: #EAEFEF;")    # 배경색 설정
+        self.scroll_area.setStyleSheet("background-color: transparent;")
         
         # 스크롤 안에 들어갈 실제 메시지 표시용 위젯
         self.content_widget = QWidget()
@@ -32,6 +36,36 @@ class ChatArea(QWidget):
         # 레이아웃
         self.chat_layout.addStretch()
 
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        
+        # 기존의 단색 배경 먼저 칠하기
+        painter.fillRect(self.rect(), QColor("#EAEFEF"))
+        
+        # 이미지 경로 동적 계산
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(current_dir, '..', 'assets', 'scaleImg.png')
+        
+        pixmap = QPixmap(image_path)
+        
+        if not pixmap.isNull():
+            # 투명도 설정
+            painter.setOpacity(0.05)
+            
+            # 이미지 스케일 조정
+            scaled_pixmap = pixmap.scaled(
+                self.size(), 
+                Qt.AspectRatioMode.KeepAspectRatio, 
+                Qt.TransformationMode.SmoothTransformation
+            )
+            
+            # 정중앙에 배치하기 위한 좌표 계산
+            x = (self.width() - scaled_pixmap.width()) // 2
+            y = ((self.height() - scaled_pixmap.height()) // 2) + 50
+            
+            # 화면에 그리기
+            painter.drawPixmap(x, y, scaled_pixmap)
+
     def add_message(self, text, is_user):
         bubble = ChatBubble(text, is_user)
         
@@ -39,7 +73,6 @@ class ChatArea(QWidget):
         align = Qt.AlignmentFlag.AlignRight if is_user else Qt.AlignmentFlag.AlignLeft
         
         # 빈 공간이 항상 맨 밑에 있도록 위쪽에 삽입
-        # 세 번째 인자로 alignment 전달하여 너비 팽창 방지
         self.chat_layout.insertWidget(self.chat_layout.count() - 1, bubble, alignment=align)
 
     def clear_chat(self):
